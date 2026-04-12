@@ -1,0 +1,32 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.2.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.0'
+    id 'com.gradleup.shadow' version '9.3.1'
+    id 'org.jetbrains.dokka' version '2.2.0'
+}
+
+group = 'lab6.prog'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+shadowJar {
+    archiveBaseName.set('Lab6-client')
+    archiveVersion.set('1.0')
+    manifest {
+        attributes 'Main-Class': 'MainKt'
+    }
+}
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0'
+    implementation "io.ktor:ktor-network:3.4.2"
+    implementation project(':common')
+}
+
+kotlin {
+    jvmToolchain(17)
+}

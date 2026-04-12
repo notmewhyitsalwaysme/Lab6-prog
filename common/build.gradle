@@ -1,0 +1,21 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.2.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.0'
+    id 'org.jetbrains.dokka' version '2.2.0'
+}
+
+group = 'lab6.prog'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0'
+}
+
+kotlin {
+    jvmToolchain(17)
+}
