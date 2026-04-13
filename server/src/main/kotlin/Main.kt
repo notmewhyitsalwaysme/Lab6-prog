@@ -67,6 +67,7 @@ fun registerServerCommands(
         AddIfMaxCommand(manager),
         AddIfMinCommand(manager),
         HistoryCommand(invoker),
+        GetCommandsCommand(invoker),
         SumOfMinutesCommand(manager),
         MinByNameCommand(manager),
         PrintDescendingMinutesCommand(manager),

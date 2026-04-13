@@ -2,51 +2,43 @@ import network.NetworkManager
 import input.HumanBeingBuilder
 import input.IOManager
 import network.Request
-
-
-// BEGIN ---- Move it to CommandValidator
-
-// Команды, которые требуют ввода HumanBeing
-private val HUMAN_BEING_COMMANDS = setOf("add", "add_if_max", "add_if_min")
-
-// Команды с аргументом (UUID) в строке команды
-private val ARG_COMMANDS = setOf("update", "remove_by_id", "execute_script")
-
-// Все команды, доступные клиенту (save — только серверная)
-private val KNOWN_COMMANDS = setOf(
-    "help", "info", "show", "add", "update",
-    "remove_by_id", "clear", "execute_script",
-    "add_if_max", "add_if_min", "history",
-    "sum_of_minutes_of_waiting", "min_by_name",
-    "print_field_descending_minutes_of_waiting",
-    "exit"
-)
-
-// END ---- Move it to CommandValidator
+import runner.CommandValidator
 
 fun main(args: Array<String>) {
     val host = if (args.isNotEmpty()) args[0] else "localhost"
     val port = if (args.size >= 2) args[1].toIntOrNull() ?: 8080 else 8080
 
-    val io = IOManager()
+    val io = IOManager()                        // Name by Boris Bosenko
     val client = NetworkManager(host, port)
+    val validator = CommandValidator()
 
-    io.print("""
-        |╔══════════════════════════════════════╗
-        |║   Lab6 Client — подключение к $host:$port
-        |╚══════════════════════════════════════╝
-        |Введите 'help' для справки.
-    """.trimMargin())
-
-    // Shutdown hook — закрыть канал при выходе
+    // Shutdown hook
     Runtime.getRuntime().addShutdownHook(Thread {
         client.close()
     })
 
-    runClientRepl(io, client)
+    io.print("""
+        |════════════════════════════════════════════
+        |Lab6 Client — подключение к $host:$port  
+        |════════════════════════════════════════════
+            """.trimMargin())
+
+    runClientRepl(io, client, validator)
 }
 
-fun runClientRepl(io: IOManager, client: NetworkManager) {
+fun runClientRepl(io: IOManager, client: NetworkManager, validator: CommandValidator) {
+
+    val initialRequest = Request(
+        commandName = "getCommandsCommand",
+        humanBeing = null
+    )
+
+    if (client.sendRequest(initialRequest) == null) {
+        io.print("[!] Сервер недоступен. Попробуйте позже.")
+    } else {
+        io.print("|Введите 'help' для справки.")
+    }
+
     while (true) {
         val line = io.readLine(" ☭ ") ?: break
         if (line.isBlank()) continue
@@ -55,9 +47,10 @@ fun runClientRepl(io: IOManager, client: NetworkManager) {
         val commandName = parts[0].lowercase()
         val args = parts.drop(1)
 
-        // Move to CommandValidate
-        if (commandName !in KNOWN_COMMANDS) {
-            io.print("Неизвестная команда: '$commandName'. Введите 'help' для справки.")
+        val (isValidCommand, message) = validator.validate(commandName, args)
+
+        if (!isValidCommand) {
+            if (message != null) io.print(message)
             continue
         }
 
@@ -66,26 +59,12 @@ fun runClientRepl(io: IOManager, client: NetworkManager) {
             break
         }
 
-        // In the event of using fucking script (don't)
         if (commandName == "execute_script") {
-            if (args.isEmpty()) {
-                io.print("[Ошибка] Укажите путь к файлу. Пример: execute_script script.txt")
-                continue
-            }
             io.addScriptScanner(args[0])
             continue
         }
 
-        // MOVE TO FUCKING VALIDATE
-        // 4. Для update — нужен UUID аргумент ДО ввода HumanBeing
-        if (commandName == "update" && args.isEmpty()) {
-            io.print("[Ошибка] Укажите id элемента. Пример: update <uuid>")
-            continue
-        }
-
-        // 5. Строим HumanBeing если нужно
-        val humanBeing = if (commandName in HUMAN_BEING_COMMANDS ||
-            commandName == "update") {
+        val humanBeing = if (validator.isBuildsHumanBeing(commandName)) {
             try {
                 HumanBeingBuilder(io).build()
             } catch (e: IllegalStateException) {
@@ -94,7 +73,7 @@ fun runClientRepl(io: IOManager, client: NetworkManager) {
             }
         } else null
 
-        // 6. Формируем запрос и отправляем
+        // Формируем запрос и отправляем
         val request = Request(
             commandName = commandName,
             args = args,
@@ -103,7 +82,7 @@ fun runClientRepl(io: IOManager, client: NetworkManager) {
 
         val response = client.sendRequest(request)
 
-        // 7. Обрабатываем ответ
+        // Обрабатываем ответ
         if (response == null) {
             io.print("[!] Сервер недоступен. Попробуйте позже.")
         } else {
