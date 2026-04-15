@@ -23,7 +23,7 @@ shadowJar {
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0'
-    implementation "io.ktor:ktor-network:3.4.2"
+    implementation "org.jline:jline:3.30.6"
     implementation project(':common')
 }
 

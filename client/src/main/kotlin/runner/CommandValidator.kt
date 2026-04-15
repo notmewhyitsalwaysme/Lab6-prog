@@ -18,6 +18,8 @@ class CommandValidator {
         "exit"
     )
 
+    fun getKnownCommands(): Set<String> {return knownCommands}
+
     fun validate(command: String, args: List<String>?): Pair<Boolean, String?> {
         if (command !in knownCommands){
             return Pair(false, "Неизвестная команда: '$command'. Введите 'help' для справки.")
