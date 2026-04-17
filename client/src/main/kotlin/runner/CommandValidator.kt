@@ -2,23 +2,17 @@ package runner
 
 class CommandValidator {
 
-    // Команды, которые требуют ввода HumanBeing
-    private val humanBeingCommands = setOf("add", "add_if_max", "add_if_min")
-
-    // Команды с аргументом
-    private val commandsWArgs = setOf("update", "remove_by_id", "execute_script")
-
-    // Все команды, доступные клиенту
-    private val knownCommands = setOf(
-        "help", "info", "show", "add", "update",
-        "remove_by_id", "clear", "execute_script",
-        "add_if_max", "add_if_min", "history",
-        "sum_of_minutes_of_waiting", "min_by_name",
-        "print_field_descending_minutes_of_waiting",
-        "exit"
-    )
+    private var humanBeingCommands = setOf<String>()
+    private var commandsWArgs = setOf<String>()
+    private var knownCommands = setOf<String>()
 
     fun getKnownCommands(): Set<String> {return knownCommands}
+
+    fun setCommands(knownCommands: Set<String>, commandsWArgs: Set<String>, humanBeingCommands: Set<String>) {
+        this.knownCommands = knownCommands
+        this.commandsWArgs = commandsWArgs
+        this.humanBeingCommands = humanBeingCommands
+    }
 
     fun validate(command: String, args: List<String>?): Pair<Boolean, String?> {
         if (command !in knownCommands){

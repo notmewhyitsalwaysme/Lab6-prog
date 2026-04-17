@@ -29,13 +29,19 @@ fun main(args: Array<String>) {
 fun runClientRepl(io: IOManager, client: NetworkManager, validator: CommandValidator) {
 
     val initialRequest = Request(
-        commandName = "getCommandsCommand",
+        commandName = "get_commands",
         humanBeing = null
     )
+    val res = client.sendRequest(initialRequest)
 
-    if (client.sendRequest(initialRequest) == null) {
+    if (res == null) {
         io.print("[!] Сервер недоступен. Попробуйте позже.")
     } else {
+        validator.setCommands(
+            knownCommands = res.knownCommands!!,
+            commandsWArgs = res.commandsWArgs!!,
+            humanBeingCommands = res.humanBeingCommands!!
+        )
         io.print("|Введите 'help' для справки.")
     }
 

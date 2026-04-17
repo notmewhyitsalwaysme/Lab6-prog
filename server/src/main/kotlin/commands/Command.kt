@@ -1,6 +1,7 @@
 package commands
 
 import models.HumanBeing
+import network.Response
 
 /**
  * Базовый интерфейс команды.
@@ -11,6 +12,7 @@ import models.HumanBeing
 interface Command {
     val name: String
     val description: String
+    val type: CommandType
 
     /**
      * @param args строковые аргументы (UUID и т.п.)

@@ -6,6 +6,7 @@ import models.HumanBeing
 class AddIfMinCommand(private val manager: CollectionManager) : Command {
     override val name = "add_if_min"
     override val description = "добавить элемент, если он меньше минимального"
+    override val type = CommandType.HUMANBEING
 
     override fun execute(args: List<String>, humanBeing: HumanBeing?): String {
         humanBeing ?: return "[Ошибка] Объект HumanBeing не передан."

@@ -9,6 +9,7 @@ import models.HumanBeing
 class MinByNameCommand(private val manager: CollectionManager) : Command {
     override val name = "min_by_name"
     override val description = "вывести элемент с минимальным именем"
+    override val type = CommandType.SIMPLE
 
     override fun execute(args: List<String>, humanBeing: HumanBeing?): String =
         manager.minByName()?.toString() ?: "Коллекция пуста."

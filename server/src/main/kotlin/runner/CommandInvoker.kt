@@ -1,6 +1,7 @@
 package runner
 
 import commands.Command
+import commands.CommandType
 import network.Request
 import network.Response
 
@@ -32,10 +33,36 @@ class CommandInvoker {
 
         return try {
             val result = command.execute(request.args, request.humanBeing)
+            if (result == "oh uh, client need some commands") {
+                getCommandsForClient()
+            } else {
             Response(true, result)
+            }
         } catch (e: Exception) {
             Response(false, "[Ошибка выполнения] ${e.message}")
         }
+    }
+
+    private fun getCommandsForClient() : Response {
+        val knownCommands: Set<String> = commands.keys
+        val commandsWArgs = mutableSetOf("execute_script") // Cause there's no "execute_script" command. It's a lie
+        val humanBeingCommands = mutableSetOf<String>()
+
+        for (command in commands.values) {
+            if (command.type == CommandType.HUMANBEING) {
+                humanBeingCommands.add(command.name)
+            } else if (command.type == CommandType.ARGS) {
+                commandsWArgs.add(command.name)
+            }
+        }
+
+        return Response(
+            success = true,
+            message = "commands there",
+            humanBeingCommands = humanBeingCommands,
+            commandsWArgs = commandsWArgs,
+            knownCommands = knownCommands
+        )
     }
 
     fun getHistory(): List<String> = history.toList()

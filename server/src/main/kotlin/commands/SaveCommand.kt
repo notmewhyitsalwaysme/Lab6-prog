@@ -10,6 +10,7 @@ class SaveCommand(
 ) : Command {
     override val name = "save"
     override val description = "[SERVER] сохранить коллекцию в файл"
+    override val type = CommandType.SIMPLE
 
     override fun execute(args: List<String>, humanBeing: HumanBeing?): String {
         return if (fileManager.write(manager.getAll())) "Коллекция сохранена."

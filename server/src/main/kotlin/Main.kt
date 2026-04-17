@@ -9,6 +9,7 @@ fun main(args: Array<String>) {
     System.setProperty("slf4j.internal.verbosity", "WARN")
 
     val filePath = if (args.isNotEmpty()) args[0] else "data.csv"
+    val port = if (args.isNotEmpty() && args.size > 1) args[1].toInt() else 8080
 
     val fileManager = FileManager(filePath)
     val manager = CollectionManager()
@@ -21,7 +22,7 @@ fun main(args: Array<String>) {
     registerServerCommands(invoker, manager, fileManager)
 
     // Сохранение при завершении (Ctrl+C или kill)
-    val server = NetworkManager(port = 8080, invoker = invoker)
+    val server = NetworkManager(port = port, invoker = invoker)
     Runtime.getRuntime().addShutdownHook(Thread {
         println("[Server] Сохранение коллекции перед выходом...")
         fileManager.write(manager.getAll())

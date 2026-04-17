@@ -8,6 +8,7 @@ import models.HumanBeing
 class ExitCommand() : Command {
     override val name = "exit"
     override val description = "завершить программу"
+    override val type = CommandType.SIMPLE
 
     override fun execute(args: List<String>, humanBeing: HumanBeing?): String = ""
 }
