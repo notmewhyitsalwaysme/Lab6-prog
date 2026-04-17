@@ -14,7 +14,7 @@ class CollectionManager {
     val initDate: LocalDate = LocalDate.now()
 
     fun add(humanBeing: HumanBeing): Boolean {
-        logger.info { "[ADD] Создан элемент ${humanBeing.id}" }
+        logger.info { "[ADD] Element created ${humanBeing.id}" }
         return collection.add(humanBeing)
     }
 
@@ -22,19 +22,19 @@ class CollectionManager {
         val old = getById(id) ?: return false
         collection.remove(old)
         val replaced = updated.copy(id = old.id, creationDate = old.creationDate)
-        logger.info { "[UPDATE] Обновлён элемент ${old.id}" }
+        logger.info { "[UPDATE] Element updated ${old.id}" }
         return collection.add(replaced)
     }
 
     fun removeById(id: UUID): Boolean {
         val target = getById(id) ?: return false
-        logger.info { "[REMOVE] Удалён элемент ${target.id}" }
+        logger.info { "[REMOVE] Element deleted ${target.id}" }
         return collection.remove(target)
     }
 
     fun clear() {
         collection.clear()
-        logger.info { "[CLEAR] Коллекция очищена" }
+        logger.info { "[CLEAR] Collection cleared" }
     }
 
     fun getAll(): TreeSet<HumanBeing> = TreeSet(collection)
@@ -78,7 +78,7 @@ class CollectionManager {
     fun loadFromFile(items: List<HumanBeing>) {
         collection.clear()
         items.stream().forEach { collection.add(it) }
-        logger.info { "[LOAD] Загружено ${items.size} элементов" }
+        logger.info { "[LOAD] loaded ${items.size} elements" }
     }
 
     fun getInfo(): String =

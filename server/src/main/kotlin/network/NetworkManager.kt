@@ -2,12 +2,13 @@ package network
 
 import kotlinx.serialization.SerializationException
 import lab6.prog.network.AppJson
+import mu.KotlinLogging
 import runner.CommandInvoker
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 
-private const val BUFFER_SIZE = 65507
+private val logger = KotlinLogging.logger {}
 
 /**
  * UDP-сервер на основе DatagramSocket (датаграммы).
@@ -25,36 +26,36 @@ class NetworkManager(
 
     fun start() {
         println("[Server] Запущен на порту $port. Ожидание клиентов...")
-        val buf = ByteArray(BUFFER_SIZE)
+        logger.info{"Server started on port $port. Waiting for connection..."}
+        val buf = ByteArray(65507)
 
         while (!socket.isClosed) {
             try {
-                // 1. Принять датаграмму
                 val packet = DatagramPacket(buf, buf.size)
                 socket.receive(packet)
-
                 val json = String(packet.data, 0, packet.length, Charsets.UTF_8)
 
-                // 2. Десериализовать запрос
                 val request = try {
                     AppJson.decodeFromString<Request>(json)
                 } catch (e: SerializationException) {
                     System.err.println("[Server] Некорректный JSON: ${e.message}")
+                    logger.warn(e) { "Invalid request: ${e.message}" }
                     sendResponse(Response(false, "Некорректный формат запроса"), packet.address, packet.port)
                     continue
                 }
 
                 println("[Server] '${request.commandName}' от ${packet.address}:${packet.port}")
+                logger.info{"'${request.commandName}' от ${packet.address}:${packet.port}. Raw: $Request "}
 
-                // 3. Выполнить и получить ответ
+
                 val response = invoker.execute(request)
-
-                // 4. Отправить ответ
                 sendResponse(response, packet.address, packet.port)
+                logger.info{Response.toString()}
 
             } catch (e: Exception) {
                 if (!socket.isClosed)
                     System.err.println("[Server] Ошибка: ${e.message}")
+                    logger.warn(e) { "Error: ${e.message}" }
             }
         }
     }
@@ -66,6 +67,7 @@ class NetworkManager(
 
     fun stop() {
         println("[Server] Остановка...")
+        logger.info{ "Shutting down..." }
         socket.close()
     }
 }

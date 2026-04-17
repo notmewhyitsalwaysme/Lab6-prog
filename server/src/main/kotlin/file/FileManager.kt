@@ -4,6 +4,7 @@ import models.Car
 import models.Coordinates
 import models.HumanBeing
 import models.WeaponType
+import mu.KotlinLogging
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.OutputStreamWriter
@@ -11,6 +12,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.Scanner
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Менеджер файлового хранилища коллекции.
@@ -46,11 +49,13 @@ class FileManager(private val filePath: String) {
 
         if (!file.exists()) {
             System.err.println("Файл '$filePath' не найден. Коллекция будет пустой.")
+            logger.warn{"There's no '$filePath'. Collection will be empty."}
             return emptyList()
         }
 
         if (!file.canRead()) {
             System.err.println("Нет прав на чтение файла '$filePath'. Коллекция будет пустой.")
+            logger.warn{"Permission denied: '$filePath'. Collection will be empty."}
             return emptyList()
         }
 
@@ -63,20 +68,26 @@ class FileManager(private val filePath: String) {
                     val line = scanner.nextLine().trim()
                     lineNumber++
 
-                    // Пропускаем заголовок и пустые строки
+                    // skip header and empty lines
                     if (lineNumber == 1 && line.startsWith("id")) continue
                     if (line.isBlank()) continue
 
-                    parseLine(line, lineNumber)
-                        ?.let { result.add(it) }
-                        ?: System.err.println("Строка $lineNumber пропущена: некорректные данные → '$line'")
+                    val parsedLine = parseLine(line, lineNumber)
+                    if (parsedLine != null) {
+                        result.add(parsedLine)
+                    } else {
+                        System.err.println("Строка $lineNumber пропущена: некорректные данные → '$line'")
+                        logger.warn { "Line $lineNumber of $filePath is skipped: invalid data → '$line'" }
+                    }
                 }
             }
         } catch (e: FileNotFoundException) {
             System.err.println("Файл не найден во время чтения: ${e.message}")
+            logger.warn(e) {"File not found: ${e.message}"}
         }
 
         println("Загружено элементов: ${result.size} из файла '$filePath'")
+        logger.info {"${result.size} elements loaded from'$filePath'"}
         return result
     }
 
@@ -92,6 +103,7 @@ class FileManager(private val filePath: String) {
             val parts = line.split(DELIMITER, limit = 12)
             if (parts.size < 12) {
                 System.err.println("Строка $lineNumber: ожидалось 12 полей, найдено ${parts.size}")
+                logger.warn {"Line $lineNumber: expected 12 fields, found ${parts.size}"}
                 return null
             }
 
@@ -111,10 +123,8 @@ class FileManager(private val filePath: String) {
             }
             val carCool = parts[11].trim().toBoolean()
 
-            // самая лучшая валидация (100%)
             require(name.isNotBlank()) { "name не может быть пустым" }
 
-            // от такого может быть диабет
             HumanBeing(
                 id = id, name = name, coordinates = Coordinates(coordX, coordY),
                 creationDate = creationDate, realHero = realHero, hasToothpick = hasToothpick,
@@ -123,12 +133,15 @@ class FileManager(private val filePath: String) {
             )
         } catch (e: IllegalArgumentException) {
             System.err.println("Строка $lineNumber — ошибка данных: ${e.message}")
+            logger.warn(e) {"Line $lineNumber: ${e.message}"}
             null
         } catch (e: DateTimeParseException) {
             System.err.println("Строка $lineNumber — неверный формат даты: ${e.message}")
+            logger.warn(e) {"Line $lineNumber: ${e.message}"}
             null
         } catch (e: Exception) {
             System.err.println("Строка $lineNumber — неожиданная ошибка: ${e.message}")
+            logger.warn(e) {"Line $lineNumber: ${e.message}"}
             null
         }
     }
@@ -144,6 +157,7 @@ class FileManager(private val filePath: String) {
 
         if (file.exists() && !file.canWrite()) {
             System.err.println("Нет прав на запись в файл '$filePath'.")
+            logger.warn{"Permission denied: '$filePath'."}
             return false
         }
 
@@ -160,9 +174,11 @@ class FileManager(private val filePath: String) {
             true
         } catch (e: SecurityException) {
             println("Отказано в доступе к файлу '$filePath': ${e.message}")
+            logger.warn(e) {"Permission denied: '$filePath'."}
             false
         } catch (e: Exception) {
             println("Ошибка записи в файл: ${e.message}")
+            logger.warn(e) {"An error occurred: '$filePath'."}
             false
         }
     }
